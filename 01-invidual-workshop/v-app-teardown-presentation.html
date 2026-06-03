@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>V-App / V-AI Teardown</title>
+    <style>
+      :root {
+        --ink: #121826;
+        --muted: #647084;
+        --line: #dfe5ec;
+        --paper: #f7f8fb;
+        --surface: #ffffff;
+        --blue: #2457d6;
+        --teal: #0f8b7e;
+        --red: #c7362f;
+        --amber: #b7791f;
+        --green: #287f4f;
+        --violet: #6549c8;
+        --shadow: 0 18px 50px rgba(18, 24, 38, 0.09);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .deck {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        border-bottom: 1px solid rgba(223, 229, 236, 0.92);
+        background: rgba(247, 248, 251, 0.94);
+        backdrop-filter: blur(14px);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        min-height: 62px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 210px;
+        font-weight: 800;
+        letter-spacing: 0;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: var(--ink);
+        color: #fff;
+        font-size: 14px;
+      }
+
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      nav a {
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+        padding: 8px 11px;
+        text-decoration: none;
+      }
+
+      nav a:hover {
+        background: #e9edf5;
+        color: var(--ink);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+        gap: 34px;
+        align-items: center;
+        min-height: calc(100vh - 62px);
+        padding: 56px 0 48px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 850;
+        letter-spacing: 0.08em;
+        padding: 8px 12px;
+        text-transform: uppercase;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 99px;
+        background: var(--teal);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 900px;
+        margin-bottom: 20px;
+        font-size: clamp(44px, 7vw, 86px);
+        line-height: 0.97;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin-bottom: 20px;
+        font-size: clamp(30px, 4vw, 52px);
+        line-height: 1.04;
+        letter-spacing: 0;
+      }
+
+      h3 {
+        margin-bottom: 10px;
+        font-size: 20px;
+        line-height: 1.2;
+      }
+
+      .lead {
+        max-width: 760px;
+        color: var(--muted);
+        font-size: clamp(19px, 2.2vw, 25px);
+        line-height: 1.38;
+      }
+
+      .hero-points {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 32px;
+      }
+
+      .metric {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 16px;
+      }
+
+      .metric strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 22px;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .phone-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        align-items: end;
+      }
+
+      .phone-shot {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .phone-shot img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1290 / 2796;
+        object-fit: cover;
+        object-position: top center;
+      }
+
+      .phone-shot:nth-child(2) {
+        transform: translateY(28px);
+      }
+
+      section {
+        padding: 72px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .section-kicker {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 850;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+        gap: 28px;
+        align-items: start;
+      }
+
+      .quote-panel {
+        border-left: 5px solid var(--blue);
+        background: var(--surface);
+        padding: 24px;
+      }
+
+      .quote-panel p {
+        margin-bottom: 0;
+        font-size: 22px;
+        font-weight: 760;
+        line-height: 1.35;
+      }
+
+      .source-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .source {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 18px;
+      }
+
+      .source b {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .source p {
+        margin-bottom: 10px;
+        color: var(--muted);
+      }
+
+      .source a {
+        color: var(--blue);
+        font-weight: 760;
+      }
+
+      .evidence-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .evidence-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .evidence-copy {
+        padding: 20px;
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .tag {
+        border-radius: 999px;
+        background: #eef2f7;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        padding: 6px 9px;
+      }
+
+      .tag.good {
+        background: #e9f6ee;
+        color: var(--green);
+      }
+
+      .tag.risk {
+        background: #fff3dc;
+        color: var(--amber);
+      }
+
+      .tag.fail {
+        background: #fdebea;
+        color: var(--red);
+      }
+
+      .prompt {
+        color: var(--ink);
+        font-size: 15px;
+        font-weight: 750;
+      }
+
+      .evidence-card ul,
+      .path-card ul,
+      .decision ul {
+        margin: 14px 0 0;
+        padding-left: 19px;
+        color: var(--muted);
+      }
+
+      .screen-pair {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        border-top: 1px solid var(--line);
+        background: #eef2f7;
+        padding: 8px;
+      }
+
+      .screen-pair img {
+        width: 100%;
+        height: 380px;
+        border-radius: 6px;
+        background: white;
+        object-fit: cover;
+        object-position: top center;
+      }
+
+      .path-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .path-card {
+        min-height: 260px;
+        border: 1px solid var(--line);
+        border-top: 5px solid var(--blue);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 20px;
+      }
+
+      .path-card.low {
+        border-top-color: var(--amber);
+      }
+
+      .path-card.fail {
+        border-top-color: var(--red);
+      }
+
+      .path-card.correction {
+        border-top-color: var(--violet);
+      }
+
+      .path-label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .decision {
+        display: grid;
+        grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .decision-title {
+        border-radius: 8px;
+        background: var(--ink);
+        color: white;
+        padding: 28px;
+      }
+
+      .decision-title h2 {
+        color: white;
+        margin-bottom: 14px;
+      }
+
+      .decision-title p {
+        color: #d5dce8;
+      }
+
+      .decision-title .section-kicker {
+        color: #aebbee;
+      }
+
+      .decision-body {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 28px;
+      }
+
+      .finding-line {
+        display: grid;
+        grid-template-columns: 120px minmax(0, 1fr);
+        gap: 16px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .finding-line:first-child {
+        padding-top: 0;
+      }
+
+      .finding-line:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .finding-line b {
+        color: var(--blue);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 12px;
+      }
+
+      .flow-wrap {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .flow {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 22px;
+      }
+
+      .flow.as-is h3 {
+        color: var(--red);
+      }
+
+      .flow.to-be h3 {
+        color: var(--green);
+      }
+
+      .flow-step {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fbfcfe;
+        padding: 14px 16px;
+        margin-top: 12px;
+        font-weight: 720;
+      }
+
+      .flow-step small {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 520;
+      }
+
+      .flow-step.break {
+        border-color: #f1aaa6;
+        background: #fff4f3;
+      }
+
+      .flow-step.fix {
+        border-color: #9fd8bd;
+        background: #f0fbf5;
+      }
+
+      .connector {
+        margin: 10px auto 0;
+        width: 2px;
+        height: 18px;
+        background: var(--line);
+      }
+
+      .branch {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .spec {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 30px;
+      }
+
+      .spec strong {
+        color: var(--green);
+      }
+
+      .footer {
+        padding: 34px 0 54px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      @media (max-width: 980px) {
+        .hero,
+        .split,
+        .decision,
+        .flow-wrap {
+          grid-template-columns: 1fr;
+        }
+
+        .evidence-grid,
+        .path-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .phone-strip {
+          max-width: 720px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .deck {
+          width: min(100% - 22px, 1180px);
+        }
+
+        .topbar-inner {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 8px;
+          padding: 10px 0;
+        }
+
+        .brand {
+          min-width: 0;
+        }
+
+        .hero {
+          padding-top: 34px;
+        }
+
+        .hero-points,
+        .evidence-grid,
+        .path-grid,
+        .branch {
+          grid-template-columns: 1fr;
+        }
+
+        .screen-pair img {
+          height: 300px;
+        }
+
+        .finding-line {
+          grid-template-columns: 1fr;
+          gap: 6px;
+        }
+      }
+
+      @media print {
+        .topbar {
+          display: none;
+        }
+
+        body {
+          background: white;
+        }
+
+        section,
+        .hero {
+          min-height: auto;
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        .phone-shot,
+        .evidence-card,
+        .path-card,
+        .flow,
+        .spec {
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="deck topbar-inner">
+        <div class="brand">
+          <div class="brand-mark">V-AI</div>
+          <span>App Teardown</span>
+        </div>
+        <nav aria-label="Presentation sections">
+          <a href="#promise">Promise</a>
+          <a href="#evidence">Evidence</a>
+          <a href="#paths">4 Paths</a>
+          <a href="#decision">Decision</a>
+          <a href="#sketch">Sketch</a>
+          <a href="#spec">SPEC</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero deck" aria-labelledby="title">
+        <div>
+          <div class="eyebrow"><span class="dot"></span> Day 05 individual workshop</div>
+          <h1 id="title">V-App / V-AI: khi promise "ngữ cảnh" gặp thủ tục thật</h1>
+          <p class="lead">
+            V-AI hứa gợi ý dịch vụ phù hợp trong hệ sinh thái Vingroup. Khi thử với
+            task campus có hậu quả hành động thật, điểm gãy nằm ở nguồn dữ liệu và
+            recovery path.
+          </p>
+          <div class="hero-points" aria-label="Key summary">
+            <div class="metric">
+              <strong>3</strong>
+              <span>prompts thực tế đã thử</span>
+            </div>
+            <div class="metric">
+              <strong>6</strong>
+              <span>screenshot làm evidence</span>
+            </div>
+            <div class="metric">
+              <strong>1</strong>
+              <span>product decision để sửa path yếu</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone-strip" aria-label="Evidence screenshots preview">
+          <div class="phone-shot">
+            <img src="../screen-shot/prompt-1-1.PNG" alt="V-AI prompt about today's schedule" />
+          </div>
+          <div class="phone-shot">
+            <img src="../screen-shot/prompt-2-2.PNG" alt="V-AI response with mixed school sources" />
+          </div>
+          <div class="phone-shot">
+            <img src="../screen-shot/prompt-3-1.PNG" alt="V-AI prompt about student confirmation letter" />
+          </div>
+        </div>
+      </section>
+
+      <section id="promise">
+        <div class="deck split">
+          <div>
+            <div class="section-kicker">01 · Promise vs Reality</div>
+            <h2>Product không chỉ hứa trả lời. Product hứa hiểu đúng ngữ cảnh.</h2>
+            <div class="quote-panel">
+              <p>
+                V-AI nên là trợ lý hiểu người dùng trong hệ sinh thái V-App, biết
+                dẫn tới tiện ích đúng, và chỉ dùng nguồn đáng tin cậy khi câu trả
+                lời khiến user phải hành động.
+              </p>
+            </div>
+          </div>
+
+          <div class="source-list">
+            <article class="source">
+              <b>Marketing claim</b>
+              <p>
+                V-App gom dịch vụ Vingroup vào một app và dùng AI để tổng hợp,
+                đối chiếu ngữ cảnh, chọn lọc nguồn chính thống.
+              </p>
+              <a href="https://vnexpress.net/vingroup-ra-mat-sieu-ung-dung-v-app-5011472.html">VnExpress source</a>
+            </article>
+            <article class="source">
+              <b>Store claim</b>
+              <p>
+                AI gợi ý nội dung, dịch vụ và tiện ích phù hợp; kết nối nhiều
+                dịch vụ số trong một nền tảng.
+              </p>
+              <a href="https://apps.apple.com/vn/app/v-app/id6755132024?l=vi">App Store source</a>
+            </article>
+            <article class="source">
+              <b>Service context</b>
+              <p>
+                Mini-app Cư dân Vinhomes có task cụ thể như gửi yêu cầu hỗ trợ,
+                liên hệ BQL, thanh toán hóa đơn, tra cứu dịch vụ nội khu.
+              </p>
+              <a href="https://v-app.vn/mini/vhr.v-app.vn">V-App mini-app source</a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="evidence">
+        <div class="deck">
+          <div class="section-kicker">02 · Evidence</div>
+          <h2>Ba prompt thật để tìm điểm gãy trong workflow</h2>
+          <div class="evidence-grid">
+            <article class="evidence-card">
+              <div class="evidence-copy">
+                <div class="tag-row">
+                  <span class="tag good">Happy một phần</span>
+                  <span class="tag">Prompt 1</span>
+                </div>
+                <h3>Lịch học / việc cần làm hôm nay</h3>
+                <p class="prompt">
+                  "Hôm nay tôi có lịch học, sự kiện hoặc việc cần làm nào trong V app không?"
+                </p>
+                <ul>
+                  <li>Không bịa lịch cụ thể khi chưa có dữ liệu.</li>
+                  <li>Có card "Xem lịch học VinUni".</li>
+                  <li>Câu trả lời dài; action quan trọng xuất hiện muộn.</li>
+                </ul>
+              </div>
+              <div class="screen-pair">
+                <img src="../screen-shot/prompt-1-1.PNG" alt="Prompt 1 first screenshot" />
+                <img src="../screen-shot/prompt-1-2.PNG" alt="Prompt 1 second screenshot" />
+              </div>
+            </article>
+
+            <article class="evidence-card">
+              <div class="evidence-copy">
+                <div class="tag-row">
+                  <span class="tag fail">Failure rõ nhất</span>
+                  <span class="tag">Prompt 2</span>
+                </div>
+                <h3>Mất thẻ sinh viên, cần vào thư viện hôm nay</h3>
+                <p class="prompt">
+                  "Tôi bị mất thẻ sinh viên và cần vào thư viện hôm nay..."
+                </p>
+                <ul>
+                  <li>AI trả lời tự tin bằng nguồn Hanu/HCMUSSH/Hutech.</li>
+                  <li>Không xác nhận đây có phải quy trình VinUni/V-App không.</li>
+                  <li>User có thể liên hệ sai nơi hoặc chuẩn bị sai giấy tờ.</li>
+                </ul>
+              </div>
+              <div class="screen-pair">
+                <img src="../screen-shot/prompt-2-1.PNG" alt="Prompt 2 first screenshot" />
+                <img src="../screen-shot/prompt-2-2.PNG" alt="Prompt 2 second screenshot" />
+              </div>
+            </article>
+
+            <article class="evidence-card">
+              <div class="evidence-copy">
+                <div class="tag-row">
+                  <span class="tag risk">Low-confidence yếu</span>
+                  <span class="tag">Prompt 3</span>
+                </div>
+                <h3>Giấy xác nhận sinh viên để nộp visa</h3>
+                <p class="prompt">
+                  "Hãy chỉ đúng mục trong V-App hoặc quy trình cần làm..."
+                </p>
+                <ul>
+                  <li>AI nói V-App chưa hỗ trợ trực tiếp.</li>
+                  <li>Sau đó vẫn đưa quy trình chung từ nguồn ngoài.</li>
+                  <li>Không có fallback chính thức cho VinUni/V-App.</li>
+                </ul>
+              </div>
+              <div class="screen-pair">
+                <img src="../screen-shot/prompt-3-1.PNG" alt="Prompt 3 first screenshot" />
+                <img src="../screen-shot/prompt-3-2.PNG" alt="Prompt 3 second screenshot" />
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="paths">
+        <div class="deck">
+          <div class="section-kicker">03 · Four Paths</div>
+          <h2>Điểm mạnh có, nhưng recovery path chưa đủ an toàn</h2>
+          <div class="path-grid">
+            <article class="path-card">
+              <div class="path-label">Happy</div>
+              <h3>Không bịa lịch</h3>
+              <ul>
+                <li>Prompt 1 không tự tạo lịch cá nhân.</li>
+                <li>Có action "Xem lịch học VinUni".</li>
+                <li>Cần đưa action lên trước phần giải thích.</li>
+              </ul>
+            </article>
+            <article class="path-card low">
+              <div class="path-label">Low-confidence</div>
+              <h3>Biết nói chưa hỗ trợ, nhưng chưa dừng đúng chỗ</h3>
+              <ul>
+                <li>Prompt 3 nói V-App chưa hỗ trợ xin giấy trực tiếp.</li>
+                <li>Sau đó vẫn tổng hợp nguồn ngoài.</li>
+                <li>Nên hỏi lại hoặc chuyển Trung tâm trợ giúp.</li>
+              </ul>
+            </article>
+            <article class="path-card fail">
+              <div class="path-label">Failure</div>
+              <h3>Sai ngữ cảnh nhưng tự tin</h3>
+              <ul>
+                <li>Prompt 2 dùng nguồn trường khác.</li>
+                <li>Không phân biệt "tham khảo" và "quy trình chính thức".</li>
+                <li>Risk cao vì user cần xử lý trong ngày.</li>
+              </ul>
+            </article>
+            <article class="path-card correction">
+              <div class="path-label">Correction</div>
+              <h3>Chưa thấy cơ chế học/sửa</h3>
+              <ul>
+                <li>UI có thumbs up/down.</li>
+                <li>Chưa thấy hỏi lại, undo, hay log correction thành case.</li>
+                <li>Cần test follow-up: "Thông tin này không phải VinUni".</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="decision">
+        <div class="deck decision">
+          <div class="decision-title">
+            <div class="section-kicker">04 · Product Decision</div>
+            <h2>Không sửa bằng cách "bot thông minh hơn". Sửa bằng source gate và recovery path.</h2>
+            <p>
+              Với thủ tục có hậu quả hành động thật, câu trả lời sai nguồn nguy hiểm hơn
+              câu trả lời "tôi chưa chắc".
+            </p>
+          </div>
+          <div class="decision-body">
+            <div class="finding-line">
+              <b>Trigger</b>
+              <span>User hỏi thủ tục campus: mất thẻ sinh viên, vào thư viện, xin giấy xác nhận.</span>
+            </div>
+            <div class="finding-line">
+              <b>Failure</b>
+              <span>V-AI nhận đúng intent nhưng truy xuất nguồn ngoài không đúng VinUni/V-App và trả lời như quy trình chính thức.</span>
+            </div>
+            <div class="finding-line">
+              <b>Impact</b>
+              <span>User có thể liên hệ sai nơi, chuẩn bị sai giấy tờ, hoặc mất thời gian khi cần xử lý ngay.</span>
+            </div>
+            <div class="finding-line">
+              <b>Layer</b>
+              <span>Data/tool grounding + UX recovery.</span>
+            </div>
+            <div class="finding-line">
+              <b>Requirement</b>
+              <span>Chỉ trả lời quy trình chính thức khi có nguồn thuộc V-App/VinUni hoặc nguồn whitelist. Nếu không có, chuyển sang low-confidence path.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="sketch">
+        <div class="deck">
+          <div class="section-kicker">05 · As-is / To-be Sketch</div>
+          <h2>Path yếu nhất: từ "search nhiều nguồn" sang "source gate trước khi trả lời"</h2>
+          <div class="flow-wrap">
+            <article class="flow as-is">
+              <h3>As-is</h3>
+              <div class="flow-step">User hỏi thủ tục campus trong V-App</div>
+              <div class="connector"></div>
+              <div class="flow-step">V-AI nhận intent<small>Mất thẻ / xin giấy xác nhận</small></div>
+              <div class="connector"></div>
+              <div class="flow-step">Search nhiều nguồn ngoài</div>
+              <div class="connector"></div>
+              <div class="flow-step break">
+                Trả lời tự tin bằng nguồn lẫn lộn
+                <small>Hanu / Hutech / HIU / VnExpress / LuatVietnam</small>
+              </div>
+              <div class="connector"></div>
+              <div class="flow-step break">User không biết phần nào là chính thức cho VinUni/V-App</div>
+            </article>
+
+            <article class="flow to-be">
+              <h3>To-be</h3>
+              <div class="flow-step">User hỏi thủ tục campus trong V-App</div>
+              <div class="connector"></div>
+              <div class="flow-step">V-AI nhận intent + phân loại risk<small>Thủ tục hành chính / cần hành động thật</small></div>
+              <div class="connector"></div>
+              <div class="flow-step fix">Kiểm tra nguồn whitelist<small>V-App / VinUni / Help Center / mini-app liên quan</small></div>
+              <div class="connector"></div>
+              <div class="branch">
+                <div class="flow-step fix">Có nguồn chính thức<small>Trả lời ngắn + nút mở đúng mục</small></div>
+                <div class="flow-step fix">Confidence thấp<small>Hỏi lại hoặc chuyển Trung tâm trợ giúp</small></div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="spec">
+        <div class="deck">
+          <div class="section-kicker">06 · SPEC Change</div>
+          <h2>Build slice sau finding</h2>
+          <div class="spec">
+            <p>
+              Prototype không build chatbot trả lời mọi câu hỏi campus. Prototype chỉ
+              xử lý một slice hẹp: <strong>AI hỗ trợ user tìm đúng thủ tục trong
+              V-App/VinUni khi thiếu thẻ hoặc cần giấy xác nhận</strong>.
+            </p>
+            <p>
+              Điều bắt buộc trong SPEC: nếu không có nguồn chính thức, AI phải hỏi lại
+              hoặc chuyển sang Trung tâm trợ giúp, thay vì tự tổng hợp từ nguồn ngoài.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="deck footer">
+      Prepared from <code>01-invidual-workshop/v-app-teardown-note.md</code> and
+      screenshots in <code>screen-shot/</code>.
+    </footer>
+  </body>
+</html>
